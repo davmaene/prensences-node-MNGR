@@ -1,0 +1,36 @@
+{
+  "name": "Point Me",
+  "type": "commonjs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "nodeJS",
+    "Presence manager system",
+    "Presence system"
+  ],
+  "author": "developer.david.maene@gmail.com",
+  "repository": {
+    "type": "GIT",
+    "directory": "prensences-nodejs-MNGR",
+    "url": "https://github.com/davmaene/prensences-nodejs-MNGR.git"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "express-fileupload": "^1.4.0",
+    "express-rate-limit": "^6.5.1",
+    "moment": "^2.29.4",
+    "mysql2": "^2.3.3",
+    "node-schedule": "^2.1.0",
+    "sequelize": "^6.21.4",
+    "sharp": "^0.31.3"
+  }
+}
