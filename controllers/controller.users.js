@@ -16,7 +16,7 @@ const ControllerUsers = {
 
     login: async (req, res, next) => {
         const { email, password, phone } = req.body;
-        if(!email || !password) return Response(res, 401, "This request must have at least !email || !password")
+        if (!email || !password) return Response(res, 401, "This request must have at least !email || !password")
         try {
             Users.findOne({
                 where: {
@@ -29,22 +29,22 @@ const ControllerUsers = {
                 //     exclude: ['password']
                 // },
             })
-            .then(user => {
-                if(user instanceof Users){
-                    passwordChecker({ plainchaine: password, cryptedchaine: user && user['password'] }, (err, verified) => {
-                        if(verified){
-                            let __user = user.toJSON();
-                            delete __user['password'];
-                            return Response(res, 200, __user);
-                        }else return Response(res, 203, "Invalides cridentials !")
-                    })
-                }else{
-                    return Response(res, 203, "Invalides cridentials !")
-                }
-            })
-            .catch(eer => {
-                return Response(res, 500, eer)
-            })
+                .then(user => {
+                    if (user instanceof Users) {
+                        passwordChecker({ plainchaine: password, cryptedchaine: user && user['password'] }, (err, verified) => {
+                            if (verified) {
+                                let __user = user.toJSON();
+                                delete __user['password'];
+                                return Response(res, 200, __user);
+                            } else return Response(res, 203, "Invalides cridentials !")
+                        })
+                    } else {
+                        return Response(res, 203, "Invalides cridentials !")
+                    }
+                })
+                .catch(eer => {
+                    return Response(res, 500, eer)
+                })
         } catch (error) {
             return Response(res, 500, error)
         }
@@ -52,7 +52,7 @@ const ControllerUsers = {
 
     register: async (req, res, next) => {
         const { fsname, lsname, nickname, email, phone, password, idconfig, matricule } = req.body;
-        if(!fsname || !lsname || !email || !phone || !password) return Response(res, 401, "this request must have at least !fsname || !lsname || !email || !phone || !password");
+        if (!fsname || !lsname || !email || !phone || !password) return Response(res, 401, "this request must have at least !fsname || !lsname || !email || !phone || !password");
 
         const crytptedpassword = await passwordCrypter({ plainchaine: password, salt: 10 });
 
@@ -65,14 +65,14 @@ const ControllerUsers = {
                     lsname,
                     nickname: nickname ? nickname : process.env.APPESCAPESTRING,
                     password: crytptedpassword
-            })
-            .then(user => {
-                if(user instanceof Users) return Response(res, 200, user)
-                else return Response(res, 400, {})
-            })
-            .catch(err => {
-                return Response(res, 500, err)
-            })
+                })
+                .then(user => {
+                    if (user instanceof Users) return Response(res, 200, user)
+                    else return Response(res, 400, {})
+                })
+                .catch(err => {
+                    return Response(res, 500, err)
+                })
         } catch (error) {
             return Response(res, 500, error)
         }
@@ -81,8 +81,9 @@ const ControllerUsers = {
     onpoint: async (req, res, next) => {
 
         const { phone, id, idconfig } = req.body;
-        if(!phone || !id || !idconfig ) return Response(res, 401, "This request must have at least !phone || !iduser")
+        if (!id || !idconfig) return Response(res, 401, "This request must have at least !phone || !iduser")
         const ref = refdate({ iduser: id });
+        const now = unix();
 
         try {
 
@@ -91,40 +92,37 @@ const ControllerUsers = {
                     idconfigs: idconfig,
                     iduser: id,
                     ref,
-                    dayin: unix(),
+                    dayin: now,
                 },
                 where: {
-                    ref
-                },
-                // raw: true
-            })
-            .then(([ record, isnew ]) => {
-                if(!isnew){
-                    if(record && record['dayclosed'] === 1) return Response(res, 405, " We can not proced with your request, cause your day is already closed ");
-                    else{
-                        Service.checkDayinOrDayout({
-                            cb: ({ isin }) => {
-                                if(isin){
-                                    record.update({
-                                        dayout: unix(),
-                                        appdecision: Text['onDayOutBeforeDayOut']['message'],
-                                        dayclosed: 1
-                                    })
-                                }
-                                return Response(res, 200,  record)
-                            } 
-                        })
+                    ref,
+                    dayin: {
+                        [Op.lte]: now
                     }
-                }else{
-                    return Response(res, 200,  record)
-                }
+                },
             })
-            .catch(err => {
-                console.log('====================================');
-                console.log(err);
-                console.log('====================================');
-                return Response(res, 503, err)
-            })
+                .then(([record, isnew]) => {
+                    if (isnew) {
+                        return Response(res, 200, record);
+                    } else {
+                        if (parseInt(record.dayclosed) === 1) {
+                            return Response(res, 405, record)
+                        } else {
+                            record.update({
+                                dayout: now,
+                                dayclosed: 1,
+                                ellapsedtowork: parseInt(now) - parseInt(record.dayin)
+                            })
+                            return Response(res, 200, record)
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.log('====================================');
+                    console.log(err);
+                    console.log('====================================');
+                    return Response(res, 503, err)
+                })
         } catch (error) {
             return Response(res, 500, error)
         }

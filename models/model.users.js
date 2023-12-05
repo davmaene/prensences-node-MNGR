@@ -6,6 +6,8 @@ const { now } = require('../helpers/helper.moment.js');
 
 dotenv.config();
 
+const { APPESCAPESTRING } = process.env
+
 const Users = Configs.define('__tbl_p_users', {
     fsname: {
         type: Sequelize.STRING,
@@ -50,6 +52,11 @@ const Users = Configs.define('__tbl_p_users', {
         type: Sequelize.INTEGER,
         allowNull: true,
         defaultValue: 0
+    },
+    tokenpush: {
+        type: Sequelize.TEXT,
+        allowNull: false,
+        defaultValue: APPESCAPESTRING
     },
     createdon: {
         type: Sequelize.STRING,

@@ -5,7 +5,7 @@ moment.locale("fr");
 const now = () => moment().format("L, LTS");
 const momentNow = () => moment().format("LTS");
 const nowInInix = () => moment().unix();
-const unix = () => momentNow();
+const unix = () => moment().unix();
 const refdate = ({ iduser }) => {
     const date = new Date();
     const m = date.getMonth();
