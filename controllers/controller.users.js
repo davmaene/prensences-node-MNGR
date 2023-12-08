@@ -10,6 +10,7 @@ const { unix, refdate } = require("../helpers/helper.moment.js");
 // const { randomLongNumber } = require("../helpers/helper.random.js");
 const { Text } = require("../helpers/helper.text.js");
 const { randomLongNumber } = require("../helpers/helper.random.js");
+const moment = require("moment");
 
 dotenv.config();
 
@@ -87,6 +88,11 @@ const ControllerUsers = {
             ref = ref || (refdate({ iduser: id }));
             const now = unix();
 
+            const currentDate = moment(); // current date and time
+
+            const _startOfTheDay = moment().startOf('day');
+            const _endOfTheDay = moment().endOf('day');
+
             Presences.findOrCreate({
                 defaults: {
                     idconfigs: idconfig,
@@ -95,11 +101,11 @@ const ControllerUsers = {
                     dayin: now,
                 },
                 where: {
-                    // ref,
+                    ref,
                     iduser: id,
-                    dayin: {
-                        [Op.lte]: now
-                    }
+                    // dayin: {
+                    //     [Op.lte]: now
+                    // }
                 },
             })
                 .then(([record, isnew]) => {
@@ -109,12 +115,25 @@ const ControllerUsers = {
                         if (parseInt(record.dayclosed) === 1) {
                             return Response(res, 405, record)
                         } else {
-                            record.update({
-                                dayout: now,
-                                dayclosed: 1,
-                                ellapsedtowork: parseInt(now) - parseInt(record.dayin)
-                            })
-                            return Response(res, 200, record)
+                            if (currentDate.isSameOrBefore(_endOfTheDay)) {
+                                record.update({
+                                    appdecision: 1,
+                                    dayout: now,
+                                    dayclosed: 1,
+                                    ellapsedtowork: parseInt(now) - parseInt(record.dayin),
+                                    observation: `OK`
+                                })
+                                return Response(res, 200, record)
+                            } else {
+                                record.update({
+                                    appdecision: 4,
+                                    dayout: now,
+                                    dayclosed: 1,
+                                    ellapsedtowork: parseInt(now) - parseInt(record.dayin),
+                                    observation: `OK`
+                                })
+                                return Response(res, 406, record)
+                            }
                         }
                     }
                 })
@@ -124,15 +143,45 @@ const ControllerUsers = {
                     console.log('====================================');
                     return Response(res, 503, err)
                 })
+
         } catch (error) {
             return Response(res, 500, error)
         }
     },
 
     gethistory: async (req, res, next) => {
+        try {
+            Presences.findAndCountAll({
+                where: {
+                    status: 1
+                }
+            })
+                .then(({ count, rows }) => {
+                    return Response(res, 200, { count, rows })
+                })
+                .catch(err => {
+                    return Response(res, 500, err)
+                })
+        } catch (error) {
+            return Response(res, 500, error)
+        }
+    },
+
+    gethistorybyuser: async (req, res, next) => {
         const { id } = req.params;
         try {
-            return Response(res, 200, id)
+            Presences.findAndCountAll({
+                where: {
+                    status: 1,
+                    iduser: id
+                }
+            })
+                .then(({ count, rows }) => {
+                    return Response(res, 200, { count, rows })
+                })
+                .catch(err => {
+                    return Response(res, 500, err)
+                })
         } catch (error) {
             return Response(res, 500, error)
         }

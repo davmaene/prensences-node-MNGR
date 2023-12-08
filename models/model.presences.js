@@ -54,9 +54,9 @@ const Presences = Configs.define('__tbl_p_presences', {
         defaultValue: process.env.APPESCAPESTRING
     },
     appdecision: {
-        type: Sequelize.TEXT,
+        type: Sequelize.INTEGER,
         allowNull: false,
-        defaultValue: process.env.APPESCAPESTRING
+        defaultValue: 0
     },
 
     updatedon: {
