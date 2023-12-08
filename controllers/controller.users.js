@@ -9,6 +9,7 @@ const { Presences } = require("../models/model.presences.js");
 const { unix, refdate } = require("../helpers/helper.moment.js");
 // const { randomLongNumber } = require("../helpers/helper.random.js");
 const { Text } = require("../helpers/helper.text.js");
+const { randomLongNumber } = require("../helpers/helper.random.js");
 
 dotenv.config();
 
@@ -80,12 +81,11 @@ const ControllerUsers = {
 
     onpoint: async (req, res, next) => {
 
-        const { phone, id, idconfig } = req.body;
+        let { phone, id, idconfig, ref } = req.body;
         if (!id || !idconfig) return Response(res, 401, "This request must have at least !phone || !iduser")
-        const ref = refdate({ iduser: id });
-        const now = unix();
-
         try {
+            ref = ref || (refdate({ iduser: id }));
+            const now = unix();
 
             Presences.findOrCreate({
                 defaults: {
@@ -95,7 +95,8 @@ const ControllerUsers = {
                     dayin: now,
                 },
                 where: {
-                    ref,
+                    // ref,
+                    iduser: id,
                     dayin: {
                         [Op.lte]: now
                     }

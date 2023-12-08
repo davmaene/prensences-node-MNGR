@@ -17,7 +17,7 @@ const Presences = Configs.define('__tbl_p_presences', {
     ellapsedtowork: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        defaultValue: 1
+        defaultValue: 0
     },
     status: {
         type: Sequelize.INTEGER,
