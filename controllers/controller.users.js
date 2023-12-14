@@ -172,7 +172,6 @@ const ControllerUsers = {
     gethistorybyuser: async (req, res, next) => {
         const { id } = req.params;
         try {
-
             Users.findOne({
                 where: {
                     [Op.or]: [
@@ -185,6 +184,8 @@ const ControllerUsers = {
             })
                 .then(user => {
                     if (user instanceof Users) {
+                        user = user.toJSON()
+                        const { id } = user
                         Presences.findAndCountAll({
                             where: {
                                 status: 1,
@@ -198,7 +199,7 @@ const ControllerUsers = {
                                 return Response(res, 500, err)
                             })
                     } else {
-
+                        return Response(res, 404, "The user can not be found on this server !")
                     }
                 })
                 .catch(err => {
