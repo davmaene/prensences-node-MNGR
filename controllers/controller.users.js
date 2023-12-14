@@ -6,7 +6,7 @@ const { fillphone } = require("../helpers/helper.fillphonenumber.js");
 const { Op } = require("sequelize");
 const { Service } = require("../services/service.presence.js");
 const { Presences } = require("../models/model.presences.js");
-const { unix, refdate } = require("../helpers/helper.moment.js");
+const { unix, refdate, now } = require("../helpers/helper.moment.js");
 // const { randomLongNumber } = require("../helpers/helper.random.js");
 const { Text } = require("../helpers/helper.text.js");
 const { randomLongNumber } = require("../helpers/helper.random.js");
@@ -85,20 +85,24 @@ const ControllerUsers = {
         let { phone, id, idconfig, ref } = req.body;
         if (!id || !idconfig) return Response(res, 401, "This request must have at least !phone || !iduser")
         try {
-            ref = ref || (refdate({ iduser: id }));
-            const now = unix();
+            ref = (refdate({ iduser: id })) || ref || 0;
+            const n = unix();
 
             const currentDate = moment(); // current date and time
 
             const _startOfTheDay = moment().startOf('day');
             const _endOfTheDay = moment().endOf('day');
 
+            console.log("Generated ref is ===> ", ref);
+
             Presences.findOrCreate({
                 defaults: {
                     idconfigs: idconfig,
                     iduser: id,
                     ref,
-                    dayin: now,
+                    dayin: n,
+                    createdon: now(),
+                    updateon: now()
                 },
                 where: {
                     ref,
@@ -118,7 +122,7 @@ const ControllerUsers = {
                             if (currentDate.isSameOrBefore(_endOfTheDay)) {
                                 record.update({
                                     appdecision: 1,
-                                    dayout: now,
+                                    dayout: n,
                                     dayclosed: 1,
                                     ellapsedtowork: parseInt(now) - parseInt(record.dayin),
                                     observation: `OK`
@@ -127,7 +131,7 @@ const ControllerUsers = {
                             } else {
                                 record.update({
                                     appdecision: 4,
-                                    dayout: now,
+                                    dayout: n,
                                     dayclosed: 1,
                                     ellapsedtowork: parseInt(now) - parseInt(record.dayin),
                                     observation: `OK`
@@ -145,6 +149,7 @@ const ControllerUsers = {
                 })
 
         } catch (error) {
+            console.log(error);
             return Response(res, 500, error)
         }
     },
