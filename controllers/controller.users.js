@@ -6,7 +6,7 @@ const { fillphone } = require("../helpers/helper.fillphonenumber.js");
 const { Op } = require("sequelize");
 const { Service } = require("../services/service.presence.js");
 const { Presences } = require("../models/model.presences.js");
-const { unix, refdate, now } = require("../helpers/helper.moment.js");
+const { unix, refdate, now, unixToDate } = require("../helpers/helper.moment.js");
 // const { randomLongNumber } = require("../helpers/helper.random.js");
 const { Text } = require("../helpers/helper.text.js");
 const { randomLongNumber } = require("../helpers/helper.random.js");
@@ -102,14 +102,11 @@ const ControllerUsers = {
                     ref,
                     dayin: n,
                     createdon: now(),
-                    updateon: now()
+                    updatedon: now()
                 },
                 where: {
                     ref,
-                    iduser: id,
-                    // dayin: {
-                    //     [Op.lte]: now
-                    // }
+                    iduser: id
                 },
             })
                 .then(([record, isnew]) => {
@@ -175,18 +172,39 @@ const ControllerUsers = {
     gethistorybyuser: async (req, res, next) => {
         const { id } = req.params;
         try {
-            Presences.findAndCountAll({
+
+            Users.findOne({
                 where: {
-                    status: 1,
-                    iduser: id
+                    [Op.or]: [
+                        { id },
+                        { email: id },
+                        { phone: id }
+                    ],
+                    status: 1
                 }
             })
-                .then(({ count, rows }) => {
-                    return Response(res, 200, { count, rows })
+                .then(user => {
+                    if (user instanceof Users) {
+                        Presences.findAndCountAll({
+                            where: {
+                                status: 1,
+                                iduser: id
+                            }
+                        })
+                            .then(({ count, rows }) => {
+                                return Response(res, 200, { count, rows })
+                            })
+                            .catch(err => {
+                                return Response(res, 500, err)
+                            })
+                    } else {
+
+                    }
                 })
                 .catch(err => {
                     return Response(res, 500, err)
                 })
+
         } catch (error) {
             return Response(res, 500, error)
         }
